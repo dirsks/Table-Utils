@@ -147,21 +147,16 @@ function TableUtils:_notify(item)
 end;
 function TableUtils:process(handlerFunc)
 	if self._isProcessing then return end
-	self._isProcessing=true
-	local function runNext()
-		if self:isEmpty() then
-			self._isProcessing=false
-			return
-		end
-		local currentIndex=self._first
-		local currentItem=self:pop()
-		local success,result=pcall(handlerFunc,currentItem,currentIndex)
-		if success and result==true then
-			runNext()
-		else
-			self._isProcessing=false
-		end
-	end
-	runNext()
+	self._isProcessing=true;
+	while self._isProcessing and not self:isEmpty() do
+		local currentIndex=self._first;
+		local currentItem=self:pop();
+		local success,result=pcall(handlerFunc,currentItem,currentIndex);
+		if not success or result~=true then
+			self._isProcessing=false;
+			break;
+		end;
+	end;
+	self._isProcessing=false;
 end
 return TableUtils;
