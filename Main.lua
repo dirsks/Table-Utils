@@ -3,9 +3,9 @@
 							Table Utils
 						 Read Before Using
 	
-	Version: 1.0.9
+	Version: 1.1.0
 	
-	Release Version: 1.0.9
+	Release Version: 1.1.0
 
 	TODO: 
 	TableUtils.new() --> This is the normal Table. Examples:
@@ -81,6 +81,22 @@
 	    return true
 	 end)
 	`
+	
+	Table:stopProcess() --> Stops a currently running :proccess function for a table. Examples:
+	`Table:push('Apple A')
+	 Table:push('Apple B')
+	 Table:push('Apple C')
+	 
+	 Table:proccess(function(item,index)
+	 	if item=='Apple C' then
+	 	 print('Counting reached its condition, stopping...')
+	 	 -- OR --
+	 	 Table:stopProccess()
+	 	 --return false <-Only if you don't want to use stopProccess
+	 	end
+	 	return true
+	 end)
+	`
 ]]
 local TableUtils={};
 TableUtils.__index = TableUtils
@@ -145,6 +161,10 @@ function TableUtils:_notify(item)
 		pcall(listener, item,self:size());
 	end;
 end;
+function TableUtils:stopProcess()
+	self._isProcessing=false;
+end
+
 function TableUtils:process(handlerFunc)
 	if self._isProcessing then return end
 	self._isProcessing=true;
