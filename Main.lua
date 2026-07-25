@@ -3,9 +3,9 @@
 							Table Utils
 						 Read Before Using
 	
-	Version: 1.1.0
+	Version: 1.1.1
 	
-	Release Version: 1.1.0
+	Release Version: 1.1.1
 
 	TODO: 
 	TableUtils.new() --> This is the normal Table. Examples:
@@ -97,6 +97,9 @@
 	 	return true
 	 end)
 	`
+	
+	--INFO: This function isn't recommended for casual uses
+	Table:_run() --> A internal functon that can be used for :proccess method.
 ]]
 local TableUtils={};
 TableUtils.__index = TableUtils
@@ -107,6 +110,7 @@ function TableUtils.new()
 	self._last=0;
 	self._listeners={};
 	self._isProcessing=false;
+	self._handler=nil
 	return self;
 end;
 function TableUtils:push(value)
@@ -157,10 +161,33 @@ function TableUtils:onPush(callback)
 	end;
 end;
 function TableUtils:_notify(item)
-	for _, listener in ipairs(self._listeners) do
-		pcall(listener, item,self:size());
+	for _,listener in ipairs(self._listeners) do
+		pcall(listener,item,self:size());
 	end;
 end;
+
+function Queue:_run()
+	if self._isProcessing or not self._handler or self:isEmpty() then 
+		return 
+	end
+	self._isProcessing=true
+	task.spawn(function()
+		while not self:isEmpty() and self._isProcessing do
+			local currentIndex=self._first
+			local currentItem=self:pop()
+			local success,result=pcall(self._handler,currentItem,currentIndex)
+			if not success then
+				warn('Could not proccess the index '..tostring(currentIndex)..': '..tostring(result))
+			elseif result==false then
+				self._isProcessing=false
+				break
+			end
+		end
+
+		self._isProcessing=false
+	end)
+end
+
 function TableUtils:stopProcess()
 	self._isProcessing=false;
 end
