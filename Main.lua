@@ -3,9 +3,9 @@
 							Table Utils
 						 Read Before Using
 	
-	Version: 1.1.1
+	Version: 1.1.2
 	
-	Release Version: 1.1.1
+	Release Version: 1.1.2
 
 	TODO: 
 	TableUtils.new() --> This is the normal Table. Examples:
@@ -117,6 +117,7 @@ function TableUtils:push(value)
 	self._last = self._last + 1;
 	self._list[self._last]=value;
 	self:_notify(value);
+	--self:_run()
 end;
 function TableUtils:pop()
 	if self:isEmpty() then
@@ -165,8 +166,11 @@ function TableUtils:_notify(item)
 		pcall(listener,item,self:size());
 	end;
 end;
-
-function Queue:_run()
+function TableUtils:peek()
+	if self:isEmpty() then return nil end
+	return self._list[self._first]
+end
+function TableUtils:_run()
 	if self._isProcessing or not self._handler or self:isEmpty() then 
 		return 
 	end
@@ -174,13 +178,15 @@ function Queue:_run()
 	task.spawn(function()
 		while not self:isEmpty() and self._isProcessing do
 			local currentIndex=self._first
-			local currentItem=self:pop()
+			local currentItem=self:peek()
 			local success,result=pcall(self._handler,currentItem,currentIndex)
-			if not success then
-				warn('Could not proccess the index '..tostring(currentIndex)..': '..tostring(result))
-			elseif result==false then
-				self._isProcessing=false
-				break
+			if success and result==true then
+				self:pop()
+			else
+				if not success then
+					warn('Cannot proccess item:', result)
+				end
+				task.wait() 
 			end
 		end
 
@@ -193,17 +199,20 @@ function TableUtils:stopProcess()
 end
 
 function TableUtils:process(handlerFunc)
-	if self._isProcessing then return end
-	self._isProcessing=true;
-	while self._isProcessing and not self:isEmpty() do
-		local currentIndex=self._first;
-		local currentItem=self:pop();
-		local success,result=pcall(handlerFunc,currentItem,currentIndex);
-		if not success or result~=true then
-			self._isProcessing=false;
-			break;
-		end;
-	end;
-	self._isProcessing=false;
+	--if self._isProcessing then return end
+	--self._isProcessing=true;
+	--while self._isProcessing and not self:isEmpty() do
+	--	local currentIndex=self._first;
+	--	local currentItem=self:pop();
+	--	local success,result=pcall(handlerFunc,currentItem,currentIndex);
+	--	if not success or result~=true then
+	--		self._isProcessing=false;
+	--		break;
+	--	end;
+	--end;
+	--self._isProcessing=false;
+	self._handler = handlerFunc
+	self:_run()
 end
 return TableUtils;
+
