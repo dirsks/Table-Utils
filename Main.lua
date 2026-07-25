@@ -3,9 +3,9 @@
 							Table Utils
 						 Read Before Using
 	
-	Version: 1;0.8
+	Version: 1.0.9
 	
-	Release Version: 1.0.8
+	Release Version: 1.0.9
 
 	TODO: 
 	TableUtils.new() --> This is the normal Table. Examples:
